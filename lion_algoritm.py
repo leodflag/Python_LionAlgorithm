@@ -98,6 +98,34 @@ def init_lion_gene(gene_1,gene_2,pop_gene_num):
     print('male lion group',gene_1)
     print('female lion group',gene_2)
     return gene_1,gene_2 
+# 交配：含隨機點交配，基因突變，k_meas分群
+def lion_mating(gene_1,gene_2):
+    # 隨機單點交配
+    i=0
+    cut=0
+    gene1=gene_1 # 原公獅
+    gene2=gene_2
+    while(cut < pop_gene_num):
+        dot=random.randint(0,7) # 隨機取交換點的位置
+        gene1[cut]=gene_1[cut][0:dot]+gene_2[cut][dot:8] # 公獅1的前段基因跟母獅1的後段基因結合
+        gene1[cut+1]=gene_1[cut+1][0:dot]+gene_2[cut+1][dot:8] # 公獅2的前段基因跟母獅2的後段基因結合
+        gene2[cut]=gene_2[cut][0:dot]+gene_1[cut][dot:8] # 母獅1的前段基因跟公獅1的後段基因結合
+        gene2[cut+1]=gene_2[cut+1][0:dot]+gene_1[cut+1][dot:8] # 母獅1的前段基因跟公獅1的後段基因結合
+        cut+=2
+
+    #隨機單點突變，突變部分基因
+    s1=gene_1
+    s2=gene_2
+    for i in range(pop_gene_num):
+        rand = random.random()
+        if rand <= mutation_rate:
+            #突變，輸入為2位元，輸出字串
+            h=random.randint(0,7)#隨機位置突變
+            s1[i]=_invert_at(gene_1[i],h)#將基因碼突變
+            s2[i]=_invert_at(gene_2[i],h)
+
+    return gene1,gene2
+
 """
 適應函數Adaptation function
 """
@@ -107,18 +135,12 @@ def Adaptation_x1(x1):
 def Adaptation_x2(x2):  
     f2=x2*math.sin(20*math.pi*x2)
     return f2
-
-"""
-#初代基因組
-x=list(zip(gene_1,gene_2))
-print('初代基因組',x)
-print('初代基因組排序',order(x))
-"""
 """
 1.產生獅群
 """
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
-
 """
 2.繁衍後代
 """
+cubs_group=male_group.extend(female_group)
+print('cubs',cubs_group)
