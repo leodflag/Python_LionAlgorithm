@@ -114,15 +114,12 @@ def lion_mating(gene_1,gene_2):
         cut+=2
 
     #隨機單點突變，突變部分基因
-    s1=gene_1
-    s2=gene_2
-    for i in range(pop_gene_num):
+    s1=gene_1+gene_2
+    for i in range(pop_gene_num*2):
         rand = random.random()
-        if rand <= mutation_rate:
-            #突變，輸入為2位元，輸出字串
-            h=random.randint(0,7)#隨機位置突變
+        if rand <= mutation_rate: # 若隨機數小於突變率
+            h=random.randint(0,7)#隨機位置突變，輸入為2位元，輸出字串
             s1[i]=_invert_at(gene_1[i],h)#將基因碼突變
-            s2[i]=_invert_at(gene_2[i],h)
 
     return gene1,gene2
 
@@ -142,5 +139,5 @@ male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 """
 2.繁衍後代
 """
-cubs_group=male_group.extend(female_group)
+cubs_group = male_group+female_group
 print('cubs',cubs_group)
