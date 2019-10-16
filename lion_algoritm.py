@@ -100,10 +100,10 @@ def init_lion_gene(gene_1,gene_2,pop_gene_num):
     return gene_1,gene_2 
 # 交配：含隨機點交配，基因突變，k_meas分群
 def lion_mating(gene_1,gene_2):
-    # 隨機單點交配
+    # 隨機單點交配，公母交配產生幼獅
     i=0
     cut=0
-    gene1=gene_1 # 原公獅
+    gene1=gene_1 
     gene2=gene_2
     while(cut < pop_gene_num):
         dot=random.randint(0,7) # 隨機取交換點的位置
@@ -114,13 +114,14 @@ def lion_mating(gene_1,gene_2):
         cut+=2
 
     #隨機單點突變，突變部分基因
-    s1=gene_1+gene_2
+    s1=gene_1+gene_2 # 幼獅群
+    s2=s1 # 2n隻幼獅複製產生新2n隻幼獅
     for i in range(pop_gene_num*2):
         rand = random.random()
         if rand <= mutation_rate: # 若隨機數小於突變率
             h=random.randint(0,7)#隨機位置突變，輸入為2位元，輸出字串
-            s1[i]=_invert_at(gene_1[i],h)#將基因碼突變
-
+            s2[i]=_invert_at(s2[i],h)#將基因碼突變
+    s1=s1+s2 # 突變的也抓回去
     return gene1,gene2
 
 """
