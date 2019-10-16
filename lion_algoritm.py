@@ -4,56 +4,51 @@
 Genetic Algorithm
 """
 import random,math
+import numpy as np
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-
-string_length = 8 # »ùÒòéL¶È
-pop_lion_num=6 # Ä¸Èºów”µÁ¿
-best_male_lion=[] # ×î¼Ñ¹«ª{
-best_female_lion=[] # ×î¼ÑÄ¸ª{
-itera=50  # µü´ú´Î”µ
-mutation_rate=0.1  # Í»×ƒÂÊ
-
-# ª{Èº…¢”µÔOÓ‹
-male_group=[] # ¹«ª{ÈºÄ¸ów
-female_group=[] # Ä¸ª{ÈºÄ¸ów
-male_cubs_group=[] # ¹«Ó×ª{Èº
-female_cubs_group=[] # Ä¸Ó×ª{Èº
-cubs_group=[] # ½»ÅäááµÄÓ×ª{Èº
-
-# »ùÒò¹ ‡úÅĞ”à
+# ç…ç¾¤åƒæ•¸è¨­è¨ˆ
+string_length = 8 # åŸºå› é•·åº¦
+pop_lion_num=6 # æ¯ç¾¤é«”æ•¸é‡
+best_male_lion=[] # æœ€ä½³å…¬ç…
+best_female_lion=[] # æœ€ä½³æ¯ç…
+itera=50  # è¿­ä»£æ¬¡æ•¸
+mutation_rate=0.1  # çªè®Šç‡
+male_group=[] # å…¬ç…ç¾¤æ¯é«”
+female_group=[] # æ¯ç…ç¾¤æ¯é«”
+male_cubs_group=[] # å…¬å¹¼ç…ç¾¤
+female_cubs_group=[] # æ¯å¹¼ç…ç¾¤
+cubs_group=[] # äº¤é…å¾Œçš„å¹¼ç…ç¾¤
+adept=[] #é©æ‡‰å€¼
+# åŸºå› ç¯„åœåˆ¤æ–·
 lion_gene1_U=255
 lion_gene1_L=0
 lion_gene2_U=149
 lion_gene2_L=120
-
-# ÀLˆD…¢”µ
-pltX=[] # xİSéµü´ú´Î”µ
-pltY=[] # yİSéÆ½¾ùßm‘ªÖµ
-"""
-ŞD“Q
-"""
-# ŒëHŒ¦‘ª”µÖµ“QËã³ÉÊ®ßMÎ»
+# ç¹ªåœ–åƒæ•¸
+pltX=[] # xè»¸ç‚ºè¿­ä»£æ¬¡æ•¸
+pltY=[] # yè»¸ç‚ºå¹³å‡é©æ‡‰å€¼
+# ---------è½‰æ›-----------
+# å¯¦éš›å°æ‡‰æ•¸å€¼æ›ç®—æˆåé€²ä½
 def floTurnTen(x):
     xx=(x-(-3.0))*255/15.1
     return round(xx)
-# Ê®ßMÎ»ŞD“Q³É×Ö´®»ùÒò´a
+# åé€²ä½è½‰æ›æˆå­—ä¸²åŸºå› ç¢¼
 def turnStrGene(x):
     return bin(x)[2:].zfill(string_length)
-# ¶şßMÎ»µÄ×Ö´®ŞD»ØÊ®ßMÎ»
+# äºŒé€²ä½çš„å­—ä¸²è½‰å›åé€²ä½
 def bin_Int(x):
     return int(x,2)
-# Ê®ßMÎ»“QËã³ÉÕæŒ¸¡üc”µ
+# åé€²ä½æ›ç®—æˆçœŸå¯¦æµ®é»æ•¸
 def tenTurnflo(x):
     xx=15.1*x/255-3.0
     return round(float(xx),1)
-"""
-»ùÒòµÄ²Ù×÷
-"""
-# Ö¸¶¨Î»ÖÃÍ»×ƒ
+#---------åŸºå› çš„æ“ä½œ-----------
+# æŒ‡å®šä½ç½®çªè®Š
 def _invert_at(s, index):
-    # "**"•şÏÈß\Ëã£¬sé×Ö´®
+    # "**"æœƒå…ˆé‹ç®—ï¼Œsç‚ºå­—ä¸²
     return bin(int(s,2)^2 ** (index))[2:].zfill(string_length)
-# ´óµ½Ğ¡ÅÅĞò
+# å¤§åˆ°å°æ’åº
 def order(x):
     temp=0
     for i in range(6):
@@ -63,7 +58,8 @@ def order(x):
                 x[j]=x[i]
                 x[i]=temp
     return x
-# ½â‰º¿s   
+"""
+# è§£å£“ç¸®   
 def zipReturn(pool):
     x=[]
     adept[:],x[:]=zip(*pool)
@@ -72,22 +68,23 @@ def zipReturn(pool):
     gene_1[:],gene_2[:]=zip(*x)
     print('gene_1,gene_2',gene_1,gene_2)
     return gene_1,gene_2
-# ÅĞ”à´óĞ¡£¬İ”Èëint
+"""
+# åˆ¤æ–·å¤§å°ï¼Œè¼¸å…¥int
 def range_gene_1(x):
-    if x>=gene_1_L and x<=gene_1_U:
+    if x>=lion_gene1_L and x<=lion_gene1_U:
         return 1
     else:
         return 0
 def range_gene_2(x):
-    if x>=gene_2_L and x<=gene_2_U:
+    if x>=lion_gene2_L and x<=lion_gene2_U:
         return 1
     else:
         return 0    
-# „hµôÇ°6‚€»ùÒò
+# åˆªæ‰å‰6å€‹åŸºå› 
 def delList(x):
     if itera!=50:
        del x[0:6]     
-# ®aÉú³õ´úª{Èº
+# ç”¢ç”Ÿåˆä»£ç…ç¾¤
 def init_lion_gene(gene_1,gene_2,pop_gene_num):
     for i in range(pop_gene_num*2):
         s1=random.randint(0,255)
@@ -98,47 +95,49 @@ def init_lion_gene(gene_1,gene_2,pop_gene_num):
     print('male lion group',gene_1)
     print('female lion group',gene_2)
     return gene_1,gene_2 
-# ½»Åä£ºº¬ëS™Cüc½»Åä£¬»ùÒòÍ»×ƒ£¬k_meas·ÖÈº
+# äº¤é…ï¼šå«éš¨æ©Ÿé»äº¤é…ï¼ŒåŸºå› çªè®Šï¼Œk_measåˆ†ç¾¤
 def lion_mating(gene_1,gene_2):
-    # ëS™C†Îüc½»Åä£¬¹«Ä¸½»Åä®aÉúÓ×ª{
+    # éš¨æ©Ÿå–®é»äº¤é…ï¼Œå…¬æ¯äº¤é…ç”¢ç”Ÿå¹¼ç…
     i=0
     cut=0
     gene1=gene_1 
     gene2=gene_2
-    while(cut < pop_gene_num):
-        dot=random.randint(0,7) # ëS™CÈ¡½»“QücµÄÎ»ÖÃ
-        gene1[cut]=gene_1[cut][0:dot]+gene_2[cut][dot:8] # ¹«ª{1µÄÇ°¶Î»ùÒò¸úÄ¸ª{1µÄáá¶Î»ùÒò½YºÏ
-        gene1[cut+1]=gene_1[cut+1][0:dot]+gene_2[cut+1][dot:8] # ¹«ª{2µÄÇ°¶Î»ùÒò¸úÄ¸ª{2µÄáá¶Î»ùÒò½YºÏ
-        gene2[cut]=gene_2[cut][0:dot]+gene_1[cut][dot:8] # Ä¸ª{1µÄÇ°¶Î»ùÒò¸ú¹«ª{1µÄáá¶Î»ùÒò½YºÏ
-        gene2[cut+1]=gene_2[cut+1][0:dot]+gene_1[cut+1][dot:8] # Ä¸ª{1µÄÇ°¶Î»ùÒò¸ú¹«ª{1µÄáá¶Î»ùÒò½YºÏ
+    while(cut < pop_lion_num):
+        dot=random.randint(0,7) # éš¨æ©Ÿå–äº¤æ›é»çš„ä½ç½®
+        gene1[cut]=gene_1[cut][0:dot]+gene_2[cut][dot:8] # å…¬ç…1çš„å‰æ®µåŸºå› è·Ÿæ¯ç…1çš„å¾Œæ®µåŸºå› çµåˆ
+        gene1[cut+1]=gene_1[cut+1][0:dot]+gene_2[cut+1][dot:8] # å…¬ç…2çš„å‰æ®µåŸºå› è·Ÿæ¯ç…2çš„å¾Œæ®µåŸºå› çµåˆ
+        gene2[cut]=gene_2[cut][0:dot]+gene_1[cut][dot:8] # æ¯ç…1çš„å‰æ®µåŸºå› è·Ÿå…¬ç…1çš„å¾Œæ®µåŸºå› çµåˆ
+        gene2[cut+1]=gene_2[cut+1][0:dot]+gene_1[cut+1][dot:8] # æ¯ç…1çš„å‰æ®µåŸºå› è·Ÿå…¬ç…1çš„å¾Œæ®µåŸºå› çµåˆ
         cut+=2
 
-    #ëS™C†ÎücÍ»×ƒ£¬Í»×ƒ²¿·Ö»ùÒò
-    s1=gene_1+gene_2 # Ó×ª{Èº
-    s2=s1 # 2nëbÓ×ª{Ñ}Ñu®aÉúĞÂ2nëbÓ×ª{
-    for i in range(pop_gene_num*2):
+    #éš¨æ©Ÿå–®é»çªè®Šï¼Œçªè®Šéƒ¨åˆ†åŸºå› 
+    s1=gene_1+gene_2 # å¹¼ç…ç¾¤
+    s2=s1 # 2néš»å¹¼ç…è¤‡è£½ç”¢ç”Ÿæ–°2néš»å¹¼ç…
+    for i in range(pop_lion_num*2):
         rand = random.random()
-        if rand <= mutation_rate: # ÈôëS™C”µĞ¡ì¶Í»×ƒÂÊ
-            h=random.randint(0,7)#ëS™CÎ»ÖÃÍ»×ƒ£¬İ”Èëé2Î»Ôª£¬İ”³ö×Ö´®
-            s2[i]=_invert_at(s2[i],h)#Œ¢»ùÒò´aÍ»×ƒ
-    s1=s1+s2 # Í»×ƒµÄÒ²×¥»ØÈ¥
-    return gene1,gene2
-
-"""
-ßm‘ªº¯”µAdaptation function
-"""
+        if rand <= mutation_rate: # è‹¥éš¨æ©Ÿæ•¸å°æ–¼çªè®Šç‡
+            h=random.randint(0,7)#éš¨æ©Ÿä½ç½®çªè®Šï¼Œè¼¸å…¥ç‚º2ä½å…ƒï¼Œè¼¸å‡ºå­—ä¸²
+            s2[i]=_invert_at(s2[i],h)#å°‡åŸºå› ç¢¼çªè®Š
+    #np.array(s1,)
+    s1=s1+s2 # çªè®Šçš„ä¹ŸæŠ“å›å»
+   # for i in range(pop_lion_num*2):
+        
+    
+    return s1
+#---------é©æ‡‰å‡½æ•¸Adaptation function---------
 def Adaptation_x1(x1):  
     f1=x1*math.sin(4*math.pi*x1)
     return f1
 def Adaptation_x2(x2):  
     f2=x2*math.sin(20*math.pi*x2)
     return f2
-"""
-1.®aÉúª{Èº
-"""
+#---------K-means function---------
+def kmeans_clusters(L):
+    X = np.array(L)
+    plt.scatter(X[:,0],X[:,1],s=50)
+    
+#---------1.ç”¢ç”Ÿç…ç¾¤---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
-"""
-2.·±ÑÜáá´ú
-"""
-cubs_group = male_group+female_group
+#---------2.ç¹è¡å¾Œä»£---------
+cubs_group = lion_mating(male_group,female_group)
 print('cubs',cubs_group)

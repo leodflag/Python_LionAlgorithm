@@ -1,90 +1,35 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Oct 16 13:46:07 2019
+
+@author: USER
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ¸s¶°¤¤¤ß©M¤¸¯Àªº¼Æ¶q
-seed_num = 3
-dot_num = 20
+#ç”¢ç”Ÿ100ç­†è³‡æ–™ï¼Œæ¯ç­†è³‡æ–™éƒ½æ˜¯2å€‹æ•¸å­—
+X = np.random.rand(100,2)
 
-# ªì©l¤¸¯À
-x = np.random.randint(0, 500, dot_num)
-y = np.random.randint(0, 500, dot_num)
-# ªì©l¸s¶°¤¤¤ß
-kx = np.random.randint(0, 500, seed_num)
-ky = np.random.randint(0, 500, seed_num)
+#ç¬¬ä¸€ç­†é•·é€™æ¨£
+X[0]
 
+#ç•«å‡ºä¾†çœ‹çœ‹ï¼Œæƒ³ç•¶ç„¶æ˜¯å¹³å‡çš„ä½ˆæ»¿æ•´å€‹ç•«é¢
+#ç„¶å¾Œæˆ‘å€‘æœƒç”¨KMeansç¡¬æŠŠä»–åˆ†é¡(æ˜æ˜æ²’æ„ç¾©çš„100å€‹é»â€¦â€¦ä½†ä»–å°±æ˜¯åˆ†çš„å‡ºä¾†)
+plt.scatter(X[:,0],X[:,1],s=50)
 
-# ¨âÂI¤§¶¡ªº¶ZÂ÷
-def dis(x, y, kx, ky):
-    return int(((kx-x)**2 + (ky-y)**2)**0.5)
+#æ¥ä¸‹ä¾†åŒ¯å…¥KMeanså‡½å¼åº«
+from sklearn.cluster import KMeans
 
-# ¹ï¨Cµ§¤¸¯À¶i¦æ¤À¸s
-def cluster(x, k, kx, ky):
-    team = []
-    for i in range(3):
-        team.append([])
-    mid_dis = 99999999
-    for i in range(dot_num):
-        for j in range(seed_num):
-            distant = dis(x[i], y[i], kx[j], ky[j])
-            if distant < mid_dis:
-                mid_dis = distant
-                flag = j
-        team[flag].append([x[i], y[i]])
-        mid_dis = 99999999
-    return team
+#è«‹KMeansåˆ†æˆä¸‰é¡
+clf = KMeans(n_clusters=2)
 
-# ¹ï¤À¸s§¹ªº¤¸¯À§ä¥X·sªº¸s¶°¤¤¤ß
-def re_seed(team, kx, ky):
-    sumx = 0
-    sumy = 0
-    new_seed = []
-    for index, nodes in enumerate(team):
-        if nodes == []:
-            new_seed.append([kx[index], ky[index]])
-        for node in nodes:
-            sumx += node[0]
-            sumy += node[1]
-        new_seed.append([int(sumx/len(nodes)), int(sumy/len(nodes))])
-        sumx = 0
-        sumy = 0
-    nkx = []
-    nky = []
-    for i in new_seed:
-        nkx.append(i[0])
-        nky.append(i[1])
-    return nkx, nky
+#é–‹å§‹è¨“ç·´ï¼
+clf.fit(X)
 
-# k-means ¤À¸s
-def kmeans(x, y, kx, ky, fig):
-    team = cluster(x, y, kx, ky)
-    nkx, nky = re_seed(team, kx, ky)
-    
-    # plot: nodes connect to seeds
-    cx = []
-    cy = []
-    line = plt.gca()
-    for index, nodes in enumerate(team):
-        for node in nodes:
-            cx.append([node[0], nkx[index]])
-            cy.append([node[1], nky[index]])
-        for i in range(len(cx)):
-            line.plot(cx[i], cy[i], color='r', alpha=0.6)
-        cx = []
-        cy = []
-    
-    # Ã¸¹Ï
-    feature = plt.scatter(x, y)
-    k_feature = plt.scatter(kx, ky)
-    nk_feaure = plt.scatter(np.array(nkx), np.array(nky), s=50)
-    plt.savefig('/yourPATH/kmeans_%s.png' % fig)
-    plt.show()
+#é€™æ¨£å°±å¯ä»¥å–å¾—é æ¸¬çµæœäº†ï¼
+clf.labels_
 
-    # §PÂ_¸s¶°¤¤¤ß¬O§_¤£¦A§ó°Ê
-    if nkx == list(kx) and nky == (ky):
-        return
-    else:
-        fig += 1
-        kmeans(x, y, nkx, nky, fig)
-
-
-kmeans(x, y, kx, ky, fig=0)
+#æœ€å¾Œç•«å‡ºä¾†çœ‹çœ‹
+#çœŸçš„åˆ†æˆä¸‰é¡ï¼å¤ªç¥å¥‡äº†â€¦â€¦â€¦ç„¡æ„ç¾©çš„è³‡æ–™ä¹Ÿèƒ½åˆ†ï½
+plt.scatter(X[:,0],X[:,1], c=clf.labels_)
