@@ -5,6 +5,7 @@ Genetic Algorithm
 """
 import random,math
 import numpy as np
+import copy
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 # 獅群參數設計
@@ -58,6 +59,14 @@ def order(x):
                 x[j]=x[i]
                 x[i]=temp
     return x
+# 比較大小
+def comparison_size(x1,x2):
+    if x1>x2:
+        return 1
+    elif x1<x2:
+        return -1
+    else:
+        return 0
 """
 # 解壓縮   
 def zipReturn(pool):
@@ -69,7 +78,7 @@ def zipReturn(pool):
     print('gene_1,gene_2',gene_1,gene_2)
     return gene_1,gene_2
 """
-# 判斷大小，輸入int
+# 判斷基因區間，輸入int
 def range_gene_1(x):
     if x>=lion_gene1_L and x<=lion_gene1_U:
         return 1
@@ -83,7 +92,13 @@ def range_gene_2(x):
 # 刪掉前6個基因
 def delList(x):
     if itera!=50:
-       del x[0:6]     
+       del x[0:6]   
+#---------K-means function---------
+def kmeans_clusters(X): # 輸入n*1大小array做kmeans
+    X.reshape(1,-1) # 包含單個樣本，重整數據
+    clf = KMeans(n_clusters=2) # 分2類
+    clf.fit(X) # 以原設定訓練
+    return clf.labels_ # 返回訓練完成的標籤
 # 產生初代獅群
 def init_lion_gene(gene_1,gene_2,pop_gene_num):
     for i in range(pop_gene_num*2):
@@ -112,18 +127,31 @@ def lion_mating(gene_1,gene_2):
 
     #隨機單點突變，突變部分基因
     s1=gene_1+gene_2 # 幼獅群
-    s2=s1 # 2n隻幼獅複製產生新2n隻幼獅
+    s2=copy.deepcopy(s1) # 2n隻幼獅複製產生新2n隻幼獅
     for i in range(pop_lion_num*2):
         rand = random.random()
         if rand <= mutation_rate: # 若隨機數小於突變率
-            h=random.randint(0,7)#隨機位置突變，輸入為2位元，輸出字串
-            s2[i]=_invert_at(s2[i],h)#將基因碼突變
-    #np.array(s1,)
-    s1=s1+s2 # 突變的也抓回去
-   # for i in range(pop_lion_num*2):
-        
-    
-    return s1
+            h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
+            s2[i]=_invert_at(s2[i],h) # 將基因碼突變
+    s1=s1+s2 # 整合成 1 list
+    s2_int=[]
+    for i in range(pop_lion_num*2): # 為了使用kmeans，做成n*1 list
+        s1_int=[]
+        s1_int.append(bin_Int(s1[i])) # 換回十位數
+        s2_int.append(s1_int)
+    print(s2_int)
+    X=np.array(s2_int) # list 轉 array，逗號會消失，但可直接丟到kmeans function做分類
+    X=kmeans_clusters(X) # 輸入至kmeans function做分類，輸出分類結果
+    print(X)
+    for i in range(pop_lion_num*2):
+        if X[i]==1: # 依照分類結果分公幼獅群和母幼獅群
+            male_cubs_group.append(s2_int[i][0])
+        else:
+            female_cubs_group.append(s2_int[i][0])
+            
+    print(male_cubs_group)
+    print(female_cubs_group)
+    return male_cubs_group
 #---------適應函數Adaptation function---------
 def Adaptation_x1(x1):  
     f1=x1*math.sin(4*math.pi*x1)
@@ -131,11 +159,7 @@ def Adaptation_x1(x1):
 def Adaptation_x2(x2):  
     f2=x2*math.sin(20*math.pi*x2)
     return f2
-#---------K-means function---------
-def kmeans_clusters(L):
-    X = np.array(L)
-    plt.scatter(X[:,0],X[:,1],s=50)
-    
+ 
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 #---------2.繁衍後代---------
