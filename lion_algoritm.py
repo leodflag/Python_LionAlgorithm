@@ -15,6 +15,7 @@ best_male_lion=[] # 最佳公獅
 best_female_lion=[] # 最佳母獅
 itera=50  # 迭代次數
 mutation_rate=0.1  # 突變率
+growing_time=3
 male_group=[] # 公獅群母體
 female_group=[] # 母獅群母體
 cubs_group=[] # 交配後的幼獅群
@@ -80,6 +81,7 @@ def comparison_size(x1,x2):
         for i in range(len(x1)):
             x1_A.append(Adaptation_x1(x1[i])) # 計算適應函數並加到新x1_order列表裡
         x1_order=list(zip(x1_A,x1)) # 綁定適應值與基因的順序
+        x1_order=order(x1_order)
         end_n=len(x1)-dis_size # 取得x1應該停在哪個位置，也就是要取幾個
         delList(x1_order,end_n) # 只取前面的基因
         x1_A[:],x1_G[:]=zip(*x1_order) # 解壓縮，分離預測值與基因
@@ -88,7 +90,8 @@ def comparison_size(x1,x2):
         for i in range(len(x2)):
             x2_A.append(Adaptation_x2(x2[i])) # 計算適應函數並加到新x1_order列表裡
         x2_order=list(zip(x2_A,x2)) # 綁定適應值與基因的順序
-        end_n=len(x2)-dis_size # 取得x1應該停在哪個位置，也就是要取幾個
+        x2_order=order(x2_order)
+        end_n=len(x2)+dis_size # 取得x1應該停在哪個位置，也就是要取幾個
         delList(x2_order,end_n) # 只取前面的基因
         x2_A[:],x2_G[:]=zip(*x2_order) # 解壓縮，分離預測值與基因
         return x1,x2_G       
@@ -127,54 +130,8 @@ def lion_mating(gene_1,gene_2):
     # 隨機單點交配，公母交配產生幼獅
     i=0
     cut=0
-    gene1=[] # 公獅群
-    gene2=[] # 母獅群
-    while(cut < pop_lion_num): # 假設有6對
-        dot=random.randint(0,7) # 隨機取交換點的位置
-        gene1.append(gene_1[cut][0:dot]+gene_2[cut][dot:8]) # 公獅1的前段基因跟母獅1的後段基因結合 一對只交配一次產生2後代
-        gene1.append(gene_2[cut][0:dot]+gene_1[cut][dot:8]) # 母獅1的前段基因跟公獅1的後段基因結合
-        
-        gene2.append(gene_1[cut+1][0:dot]+gene_2[cut+1][dot:8]) # 公獅2的前段基因跟母獅2的後段基因結合
-        gene2.append(gene_2[cut+1][0:dot]+gene_1[cut+1][dot:8]) # 母獅2的前段基因跟公獅2的後段基因結合
-        cut+=2
-
-    #隨機單點突變，突變部分基因
-    s1=gene1+gene2 # 幼獅群
-    s2=copy.deepcopy(s1) # 2n隻幼獅複製產生新2n隻幼獅
-    for i in range(pop_lion_num*2):
-        rand = random.random()
-        if rand <= mutation_rate: # 若隨機數小於突變率
-            h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
-            s2[i]=_invert_at(s2[i],h) # 將基因碼突變
-    s1=s1+s2 # 整合成 1 list
-    s2_int=[]
-    for i in range(pop_lion_num*2): # 為了使用kmeans，做成n*1 list
-        s1_int=[]
-        s1_int.append(bin_Int(s1[i])) # 換回十位數
-        s2_int.append(s1_int)
-    print(s2_int)
-    X=np.array(s2_int) # list 轉 array，逗號會消失，但可直接丟到kmeans function做分類
-    X=kmeans_clusters(X) # 輸入至kmeans function做分類，輸出分類結果
-    print(X)
-    for i in range(pop_lion_num*2):
-        if X[i]==1: # 依照分類結果分公幼獅群和母幼獅群
-            male_cubs_group.append(s2_int[i][0])
-        else:
-            female_cubs_group.append(s2_int[i][0])
-            
-    print('male_cubs_group',male_cubs_group)
-    print('female_cubs_group',female_cubs_group)
-    male_cubs_group_1,female_cubs_group_1=comparison_size(male_cubs_group,female_cubs_group)
-    print('male_cubs_group',male_cubs_group_1)
-    print('female_cubs_group',female_cubs_group_1)
-    return male_cubs_group_1,female_cubs_group_1
-# 交配：含隨機點交配，基因突變，k_meas分群
-def lion_mating_1(gene_1,gene_2):
-    # 隨機單點交配，公母交配產生幼獅
-    i=0
-    cut=0
     gene_ALL=[] # 多獅群組
-    while(cut < pop_lion_num): # 假設有6對
+    while(cut < len(gene_1)): # 假設有6對
         gene1=[] # 交配後代基因
         for i in range(2):
             dot=random.randint(0,7) # 隨機取交換點的位置
@@ -183,30 +140,26 @@ def lion_mating_1(gene_1,gene_2):
         #隨機單點突變，突變部分基因
         s1=gene1 # 幼獅群
         s2=copy.deepcopy(s1) # 2n隻幼獅複製產生新2n隻幼獅
-        #print('s2_len',len(s2))
-        for i in range(4):
+        for i in range(len(s2)):
             rand = random.random()
             if rand <= mutation_rate: # 若隨機數小於突變率
                 h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
                 s2[i]=_invert_at(s2[i],h) # 將基因碼突變
         s1=s1+s2 # 整合成 1 list
         s2_int=[]
-        for i in range(8): # 為了使用kmeans，做成n*1 list
+        for i in range(len(s1)): # 為了使用kmeans，做成n*1 list
             s1_int=[]
             s1_int.append(bin_Int(s1[i])) # 換回十位數
             s2_int.append(s1_int)
-        #print(s2_int)
         X=np.array(s2_int) # list 轉 array，逗號會消失，但可直接丟到kmeans function做分類
-        X=kmeans_clusters(X) # 輸入至kmeans function做分類，輸出分類結果
-        #print(X)    
+        X=kmeans_clusters(X) # 輸入至kmeans function做分類，輸出分類結果 
         male_cubs_group=[] # 公幼獅群
         female_cubs_group=[] # 母幼獅群
-        for i in range(8):
+        for i in range(len(X)):
             if X[i]==1: # 依照分類結果分公幼獅群和母幼獅群
-                male_cubs_group.append(s2_int[i][0])
+                male_cubs_group.append(tenTurnflo(s2_int[i][0])) # 換回真實浮點數
             else:
-                female_cubs_group.append(s2_int[i][0])
-        print('male_cubs_group',male_cubs_group)
+                female_cubs_group.append(tenTurnflo(s2_int[i][0]))
         male_cubs_group_1,female_cubs_group_1=comparison_size(male_cubs_group,female_cubs_group)  
         gene_group=[] # 一公一母與孩子的獅群
         gene_group.append(gene_1[cut]) # 加入交配的一隻公獅
@@ -216,7 +169,30 @@ def lion_mating_1(gene_1,gene_2):
         gene_ALL.append(gene_group) # 成為獅群組裡的其中一個獅群
         cut+=1
     return gene_ALL
+
+def territorial_defense(group_ALL,growing_t):
+    #nomad_apt=0
+    male_a=0
+    for i in range(len(group_ALL)):
+        while(growing_t!=0):
+            nomad=random.randint(0,255)
+            nomad_a=Adaptation_x1(tenTurnflo(nomad))
+            male_a=Adaptation_x1(tenTurnflo(bin_Int(group_ALL[i][0])))
+            if nomad_a>male_a:
+                nomad_g=[]
+                nomad_g.append(turnStrGene(nomad))
+                female_g=[]
+                female_g.append(group_ALL[i][1])
+                new_group=lion_mating(nomad_g,female_g)
+                group_ALL[i]=new_group[0]
+                break
+            else:
+                growing_t-=1
+    return group_ALL
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 #---------2.繁衍後代---------
-lion_group_ALL = lion_mating_1(male_group,female_group)
+lion_group_ALL=lion_mating(male_group,female_group)
+#---------3.領土防禦---------
+lion_group_ALL_1=territorial_defense(lion_group_ALL,growing_time)
+#---------4.領土爭奪---------
