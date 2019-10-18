@@ -128,14 +128,14 @@ def lion_mating(gene_1,gene_2):
     # 隨機單點交配，公母交配產生幼獅
     i=0
     cut=0
-    gene1=gene_1 
-    gene2=gene_2
-    while(cut < pop_lion_num):
+    gene1=gene_1 # 公獅群
+    gene2=gene_2 # 母獅群
+    while(cut < pop_lion_num): # 假設有6對
         dot=random.randint(0,7) # 隨機取交換點的位置
         gene1[cut]=gene_1[cut][0:dot]+gene_2[cut][dot:8] # 公獅1的前段基因跟母獅1的後段基因結合
-        gene1[cut+1]=gene_1[cut+1][0:dot]+gene_2[cut+1][dot:8] # 公獅2的前段基因跟母獅2的後段基因結合
-        gene2[cut]=gene_2[cut][0:dot]+gene_1[cut][dot:8] # 母獅1的前段基因跟公獅1的後段基因結合
-        gene2[cut+1]=gene_2[cut+1][0:dot]+gene_1[cut+1][dot:8] # 母獅1的前段基因跟公獅1的後段基因結合
+        gene1[cut+1]=gene_2[cut][0:dot]+gene_1[cut][dot:8] # 母獅1的前段基因跟公獅1的後段基因結合
+        gene2[cut]=gene_1[cut+1][0:dot]+gene_2[cut+1][dot:8] # 公獅2的前段基因跟母獅2的後段基因結合
+        gene2[cut+1]=gene_2[cut+1][0:dot]+gene_1[cut+1][dot:8] # 母獅2的前段基因跟公獅2的後段基因結合
         cut+=2
 
     #隨機單點突變，突變部分基因
