@@ -49,11 +49,21 @@ def tenTurnflo(x):
 def _invert_at(s, index):
     # "**"會先運算，s為字串
     return bin(int(s,2)^2 ** (index))[2:].zfill(string_length)
-# 大到小排序
+#---------適應函數Adaptation function---------
+def Adaptation_x1(x1):  
+    f1=x1*math.sin(4*math.pi*x1)
+    return f1
+def Adaptation_x2(x2):  
+    f2=x2*math.sin(20*math.pi*x2)
+    return f2
+# 只取前面的基因 越大越好，所以要從後面開始刪
+def delList(x,del_num):
+    del x[del_num:len(x)] 
+# 大到小排序，會用x[i][0]排
 def order(x):
     temp=0
-    for i in range(6):
-        for j in range(6):
+    for i in range(len(x)):
+        for j in range(len(x)):
             if x[j]<x[i]:
                 temp=x[j]
                 x[j]=x[i]
@@ -61,23 +71,30 @@ def order(x):
     return x
 # 比較大小
 def comparison_size(x1,x2):
-    if x1>x2:
-        return 1
-    elif x1<x2:
-        return -1
+    dis_size=len(x1)-len(x2)
+    end_n=0
+    x1_A=[]
+    x2_A=[]
+    x1_G=[]
+    x2_G=[]
+    if dis_size>0: # 若x1的基因數多於x2
+        for i in range(len(x1)):
+            x1_A.append(Adaptation_x1(x1[i])) # 計算適應函數並加到新x1_order列表裡
+        x1_order=list(zip(x1_A,x1)) # 綁定適應值與基因的順序
+        end_n=len(x1)-dis_size # 取得x1應該停在哪個位置，也就是要取幾個
+        delList(x1_order,end_n) # 只取前面的基因
+        x1_A[:],x1_G[:]=zip(*x1_order) # 解壓縮，分離預測值與基因
+        return x1_G,x2
+    elif dis_size<0:
+        for i in range(len(x2)):
+            x2_A.append(Adaptation_x2(x2[i])) # 計算適應函數並加到新x1_order列表裡
+        x2_order=list(zip(x2_A,x2)) # 綁定適應值與基因的順序
+        end_n=len(x2)-dis_size # 取得x1應該停在哪個位置，也就是要取幾個
+        delList(x2_order,end_n) # 只取前面的基因
+        x2_A[:],x2_G[:]=zip(*x2_order) # 解壓縮，分離預測值與基因
+        return x1,x2_G       
     else:
-        return 0
-"""
-# 解壓縮   
-def zipReturn(pool):
-    x=[]
-    adept[:],x[:]=zip(*pool)
-    print('adept,x',adept,x)
-    print('x',x)
-    gene_1[:],gene_2[:]=zip(*x)
-    print('gene_1,gene_2',gene_1,gene_2)
-    return gene_1,gene_2
-"""
+        return x1,x2
 # 判斷基因區間，輸入int
 def range_gene_1(x):
     if x>=lion_gene1_L and x<=lion_gene1_U:
@@ -88,11 +105,7 @@ def range_gene_2(x):
     if x>=lion_gene2_L and x<=lion_gene2_U:
         return 1
     else:
-        return 0    
-# 刪掉前6個基因
-def delList(x):
-    if itera!=50:
-       del x[0:6]   
+        return 0      
 #---------K-means function---------
 def kmeans_clusters(X): # 輸入n*1大小array做kmeans
     X.reshape(1,-1) # 包含單個樣本，重整數據
@@ -149,19 +162,14 @@ def lion_mating(gene_1,gene_2):
         else:
             female_cubs_group.append(s2_int[i][0])
             
-    print(male_cubs_group)
-    print(female_cubs_group)
-    return male_cubs_group
-#---------適應函數Adaptation function---------
-def Adaptation_x1(x1):  
-    f1=x1*math.sin(4*math.pi*x1)
-    return f1
-def Adaptation_x2(x2):  
-    f2=x2*math.sin(20*math.pi*x2)
-    return f2
- 
+    print('male_cubs_group',male_cubs_group)
+    print('female_cubs_group',female_cubs_group)
+    male_cubs_group_1,female_cubs_group_1=comparison_size(male_cubs_group,female_cubs_group)
+    print('male_cubs_group',male_cubs_group_1)
+    print('female_cubs_group',female_cubs_group_1)
+    return male_cubs_group_1,female_cubs_group_1
+
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 #---------2.繁衍後代---------
-cubs_group = lion_mating(male_group,female_group)
-print('cubs',cubs_group)
+male_cubs_group,female_cubs_group = lion_mating(male_group,female_group)
