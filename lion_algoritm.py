@@ -16,6 +16,8 @@ best_female_lion=[] # 最佳母獅
 itera=50  # 迭代次數
 mutation_rate=0.1  # 突變率
 growing_time=3
+Bstrength=2
+Bcount=0
 male_group=[] # 公獅群母體
 female_group=[] # 母獅群母體
 cubs_group=[] # 交配後的幼獅群
@@ -184,13 +186,18 @@ def territorial_defense(group_all,growing_t):
                 female_g=[] 
                 female_g.append(group_ALL[i][1]) # 獨立出原母獅二進位基因
                 new_group=lion_mating(nomad_g,female_g) # 交配後產生新獅群
+                #print('==========================',i)
+                #print('group_ALL[%d]=',group_ALL[i])
                 group_ALL[i]=new_group[0] # 將新獅群放回總獅群裡
+                #print('group_ALL[%d]=',group_ALL[i])
                 times=growing_t # 新幼獅群重新成長
+                #print('times=========if',times)
             else:
                 times-=1 # 平安無事，幼獅成長
     return group_ALL
+
 def territorial_takeover(group_all):
-    male_a=0
+    Bcount=0
     for i in range(len(group_all)):
         female=[] # 獅群組
         male=[]        
@@ -204,7 +211,7 @@ def territorial_takeover(group_all):
         male=list(zip(adept,male_group))
         male=order(male)
         best_male_lion.append(male[0])
-
+        
         female.append(group_all[i][3]) # 母幼獅群
         female_group=female[0] # 加母公獅群到母獅群
         female.clear()
@@ -215,9 +222,28 @@ def territorial_takeover(group_all):
         female=list(zip(adept,female_group))
         female=order(female)
         best_female_lion.append(female[0])
-    return male_a
-        
-        
+        for f in range(len(female)):
+            if best_female_lion[i][1]==female[f][1]:
+                Bcount+=1
+        if Bcount>Bstrength:
+            adept=[]
+            female=[]
+            new=[]
+            new_f=random.randint(0,255)
+            new_f_flo=tenTurnflo(new_f)
+            new_adept=0
+            new_adept=Adaptation_x2(new_f_flo)           
+            if new_f_flo != best_male_lion[i][1] and new_adept>best_female_lion[i][0]:
+                adept.append(new_adept)
+                female.append(new_f)
+                new=zip(adept,female)    
+                best_female_lion[i]=new
+    adept.clear()
+    adept,male=zip(*best_male_lion)
+    adept=[]
+    female.clear()
+    adept,female=zip(*best_female_lion)
+    return male,female       
         
 
 #---------1.產生獅群---------
@@ -227,4 +253,4 @@ lion_group_ALL=lion_mating(male_group,female_group)
 #---------3.領土防禦---------
 lion_group_ALL_1=territorial_defense(lion_group_ALL,growing_time)
 #---------4.領土爭奪---------
-CCC=territorial_takeover(lion_group_ALL_1)
+best_male_lion,best_female_lion=territorial_takeover(lion_group_ALL_1)
