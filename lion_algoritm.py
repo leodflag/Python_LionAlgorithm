@@ -20,7 +20,6 @@ male_group=[] # 公獅群母體
 female_group=[] # 母獅群母體
 cubs_group=[] # 交配後的幼獅群
 lion_group_ALL=[] # 總獅群組
-adept=[] #適應值
 # 基因範圍判斷
 lion_gene1_U=255
 lion_gene1_L=0
@@ -169,7 +168,7 @@ def lion_mating(gene_1,gene_2):
         gene_ALL.append(gene_group) # 成為獅群組裡的其中一個獅群
         cut+=1
     return gene_ALL
-
+# 領土防禦
 def territorial_defense(group_all,growing_t):
     group_ALL=copy.deepcopy(group_all) # 複製輸入的獅群組
     male_a=0
@@ -186,12 +185,41 @@ def territorial_defense(group_all,growing_t):
                 female_g.append(group_ALL[i][1]) # 獨立出原母獅二進位基因
                 new_group=lion_mating(nomad_g,female_g) # 交配後產生新獅群
                 group_ALL[i]=new_group[0] # 將新獅群放回總獅群裡
-                times=growing_t
+                times=growing_t # 新幼獅群重新成長
             else:
-                times-=1 # 平安無事，.幼獅成長
+                times-=1 # 平安無事，幼獅成長
     return group_ALL
+def territorial_takeover(group_all):
+    male_a=0
+    for i in range(len(group_all)):
+        female=[] # 獅群組
+        male=[]        
+        adept=[]
+        male.append(group_all[i][2]) # 公幼獅群
+        male_group=male[0] # 加幼公獅群到公獅群
+        male.clear()
+        male_group.append(tenTurnflo(bin_Int(group_all[i][0]))) # 轉換原公獅加進公獅群
+        for m in range(len(male_group)):    
+            adept.append(Adaptation_x1(male_group[m])) # 計算出適應值
+        male=list(zip(adept,male_group))
+        male=order(male)
+        best_male_lion.append(male[0])
 
-#def territorial_takeover(group_all):
+        female.append(group_all[i][3]) # 母幼獅群
+        female_group=female[0] # 加母公獅群到母獅群
+        female.clear()
+        female_group.append(tenTurnflo(bin_Int(group_all[i][1]))) # 轉換原公獅加進公獅群
+        adept.clear()
+        for m in range(len(female_group)):    
+            adept.append(Adaptation_x2(female_group[m])) # 計算出適應值
+        female=list(zip(adept,female_group))
+        female=order(female)
+        best_female_lion.append(female[0])
+    return male_a
+        
+        
+        
+
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 #---------2.繁衍後代---------
@@ -199,3 +227,4 @@ lion_group_ALL=lion_mating(male_group,female_group)
 #---------3.領土防禦---------
 lion_group_ALL_1=territorial_defense(lion_group_ALL,growing_time)
 #---------4.領土爭奪---------
+CCC=territorial_takeover(lion_group_ALL_1)
