@@ -138,28 +138,28 @@ def lion_mating(gene_1,gene_2):
             gene1.append(gene_1[cut][0:dot]+gene_2[cut][dot:8]) # 公獅1的前段基因跟母獅1的後段基因結合 一對只交配一次產生2後代
             gene1.append(gene_2[cut][0:dot]+gene_1[cut][dot:8]) # 母獅1的前段基因跟公獅1的後段基因結合
         #隨機單點突變，突變部分基因
-        s1=gene1 # 幼獅群
-        s2=copy.deepcopy(s1) # 2n隻幼獅複製產生新2n隻幼獅
-        for i in range(len(s2)):
+        cubs_group=gene1 # 幼獅群
+        cubs_group2=copy.deepcopy(cubs_group) # 2n隻幼獅複製產生新2n隻幼獅
+        for i in range(len(cubs_group2)):
             rand = random.random()
             if rand <= mutation_rate: # 若隨機數小於突變率
                 h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
-                s2[i]=_invert_at(s2[i],h) # 將基因碼突變
-        s1=s1+s2 # 整合成 1 list
-        s2_int=[]
-        for i in range(len(s1)): # 為了使用kmeans，做成n*1 list
-            s1_int=[]
-            s1_int.append(bin_Int(s1[i])) # 換回十位數
-            s2_int.append(s1_int)
-        X=np.array(s2_int) # list 轉 array，逗號會消失，但可直接丟到kmeans function做分類
+                cubs_group2[i]=_invert_at(cubs_group2[i],h) # 將基因碼突變
+        cubs_group=cubs_group+cubs_group2 # 整合成 1 list
+        cubs_group2_int=[]
+        for i in range(len(cubs_group)): # 為了使用kmeans，做成n*1 list
+            cubs_group_int=[]
+            cubs_group_int.append(bin_Int(cubs_group[i])) # 換回十位數
+            cubs_group2_int.append(cubs_group_int)
+        X=np.array(cubs_group2_int) # list 轉 array，逗號會消失，但可直接丟到kmeans function做分類
         X=kmeans_clusters(X) # 輸入至kmeans function做分類，輸出分類結果 
         male_cubs_group=[] # 公幼獅群
         female_cubs_group=[] # 母幼獅群
         for i in range(len(X)):
             if X[i]==1: # 依照分類結果分公幼獅群和母幼獅群
-                male_cubs_group.append(tenTurnflo(s2_int[i][0])) # 換回真實浮點數
+                male_cubs_group.append(tenTurnflo(cubs_group2_int[i][0])) # 換回真實浮點數
             else:
-                female_cubs_group.append(tenTurnflo(s2_int[i][0]))
+                female_cubs_group.append(tenTurnflo(cubs_group2_int[i][0]))
         male_cubs_group_1,female_cubs_group_1=comparison_size(male_cubs_group,female_cubs_group)  
         gene_group=[] # 一公一母與孩子的獅群
         gene_group.append(gene_1[cut]) # 加入交配的一隻公獅
@@ -170,25 +170,28 @@ def lion_mating(gene_1,gene_2):
         cut+=1
     return gene_ALL
 
-def territorial_defense(group_ALL,growing_t):
-    #nomad_apt=0
+def territorial_defense(group_all,growing_t):
+    group_ALL=copy.deepcopy(group_all) # 複製輸入的獅群組
     male_a=0
     for i in range(len(group_ALL)):
-        while(growing_t!=0):
-            nomad=random.randint(0,255)
-            nomad_a=Adaptation_x1(tenTurnflo(nomad))
-            male_a=Adaptation_x1(tenTurnflo(bin_Int(group_ALL[i][0])))
-            if nomad_a>male_a:
+        times=growing_t
+        while(times!=0): # 若成長時間不歸零
+            nomad=random.randint(0,255) # 產生隨機流浪獅
+            nomad_a=Adaptation_x1(tenTurnflo(nomad)) # 計算流浪獅的適應值
+            male_a=Adaptation_x1(tenTurnflo(bin_Int(group_ALL[i][0]))) # 計算公獅的適應值
+            if nomad_a>male_a: # 若流浪獅適應值高於公獅
                 nomad_g=[]
-                nomad_g.append(turnStrGene(nomad))
-                female_g=[]
-                female_g.append(group_ALL[i][1])
-                new_group=lion_mating(nomad_g,female_g)
-                group_ALL[i]=new_group[0]
-                break
+                nomad_g.append(turnStrGene(nomad)) # 轉換十進位流浪獅基因成二進位，
+                female_g=[] 
+                female_g.append(group_ALL[i][1]) # 獨立出原母獅二進位基因
+                new_group=lion_mating(nomad_g,female_g) # 交配後產生新獅群
+                group_ALL[i]=new_group[0] # 將新獅群放回總獅群裡
+                times=growing_t
             else:
-                growing_t-=1
+                times-=1 # 平安無事，.幼獅成長
     return group_ALL
+
+#def territorial_takeover(group_all):
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 #---------2.繁衍後代---------
