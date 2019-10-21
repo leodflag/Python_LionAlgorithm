@@ -13,7 +13,7 @@ string_length = 8 # 基因長度
 pop_lion_num=6 # 母群體數量
 best_male_lion=[] # 最佳公獅
 best_female_lion=[] # 最佳母獅
-itera=50  # 迭代次數
+itera=5  # 迭代次數
 mutation_rate=0.1  # 突變率
 growing_time=3
 Bstrength=2
@@ -57,6 +57,9 @@ def Adaptation_x1(x1):
 def Adaptation_x2(x2):  
     f2=x2*math.sin(20*math.pi*x2)
     return f2
+def Adaptation(x1,x2):
+    f=x1*math.sin(4*math.pi*x1)+x2*math.sin(20*math.pi*x2)
+    return f
 # 只取前面的基因 越大越好，所以要從後面開始刪
 def delList(x,del_num):
     del x[del_num:len(x)] 
@@ -94,6 +97,7 @@ def comparison_size(x1,x2):
         x2_order=order(x2_order)
         end_n=len(x2)+dis_size # 取得x1應該停在哪個位置，也就是要取幾個
         delList(x2_order,end_n) # 只取前面的基因
+        #print('x2_orderx2_order',x2_order)
         x2_A[:],x2_G[:]=zip(*x2_order) # 解壓縮，分離預測值與基因
         return x1,x2_G       
     else:
@@ -123,8 +127,8 @@ def init_lion_gene(gene_1,gene_2,pop_gene_num):
             gene_1.append(turnStrGene(s1))
         else:
             gene_2.append(turnStrGene(s1))
-    print('male lion group',gene_1)
-    print('female lion group',gene_2)
+    #print('male lion group',gene_1)
+    #print('female lion group',gene_2)
     return gene_1,gene_2 
 # 交配：含隨機點交配，基因突變，k_meas分群
 def lion_mating(gene_1,gene_2):
@@ -197,7 +201,8 @@ def territorial_defense(group_all,growing_t):
     return group_ALL
 
 def territorial_takeover(group_all):
-    Bcount=0
+    best_male_lion=[]
+    best_female_lion=[]
     for i in range(len(group_all)):
         female=[] # 獅群組
         male=[]        
@@ -211,23 +216,26 @@ def territorial_takeover(group_all):
         male=list(zip(adept,male_group))
         male=order(male)
         best_male_lion.append(male[0])
-        
+        #print('-------------',i)
+        #print(best_male_lion)
         female.append(group_all[i][3]) # 母幼獅群
         female_group=female[0] # 加母公獅群到母獅群
         female.clear()
-        female_group.append(tenTurnflo(bin_Int(group_all[i][1]))) # 轉換原公獅加進公獅群
+        female_group.append(tenTurnflo(bin_Int(group_all[i][1]))) # 轉換原母獅加進母獅群
         adept.clear()
         for m in range(len(female_group)):    
             adept.append(Adaptation_x2(female_group[m])) # 計算出適應值
-        female=list(zip(adept,female_group))
-        female=order(female)
-        best_female_lion.append(female[0])
-        for f in range(len(female)):
-            if best_female_lion[i][1]==female[f][1]:
+        female1=[]
+        female1=list(zip(adept,female_group))
+        female1=order(female1)
+        Bcount=0
+        best_female_lion.append(female1[0])
+        for f in range(len(female1)):
+            if best_female_lion[i]==female1[f]:
                 Bcount+=1
         if Bcount>Bstrength:
             adept=[]
-            female=[]
+            female1=[]
             new=[]
             new_f=random.randint(0,255)
             new_f_flo=tenTurnflo(new_f)
@@ -235,22 +243,34 @@ def territorial_takeover(group_all):
             new_adept=Adaptation_x2(new_f_flo)           
             if new_f_flo != best_male_lion[i][1] and new_adept>best_female_lion[i][0]:
                 adept.append(new_adept)
-                female.append(new_f)
-                new=zip(adept,female)    
-                best_female_lion[i]=new
-    adept.clear()
-    adept,male=zip(*best_male_lion)
-    adept=[]
-    female.clear()
-    adept,female=zip(*best_female_lion)
-    return male,female       
+                female1.append(new_f_flo)
+                new=list(zip(adept,female1))    
+                best_female_lion[i]=new[0]
+        else:
+            Bcount=0
+    
+    adept[:],male[:]=zip(*best_male_lion)
+    adept[:],female[:]=zip(*best_female_lion)
+    #print('male55555',male)
+    return male,female    
         
-
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
-#---------2.繁衍後代---------
-lion_group_ALL=lion_mating(male_group,female_group)
-#---------3.領土防禦---------
-lion_group_ALL_1=territorial_defense(lion_group_ALL,growing_time)
-#---------4.領土爭奪---------
-best_male_lion,best_female_lion=territorial_takeover(lion_group_ALL_1)
+while(itera>0):
+    lion_group_ALL=[]
+    lion_group_ALL_1=[]   
+    best_male_lion_1=[]
+    best_female_lion_1=[]
+    #---------2.繁衍後代---------
+    lion_group_ALL=lion_mating(male_group,female_group)
+    #---------3.領土防禦---------
+    lion_group_ALL_1=territorial_defense(lion_group_ALL,growing_time)
+    #---------4.領土爭奪---------
+    best_male_lion_1,best_female_lion_1=territorial_takeover(lion_group_ALL_1)
+    male_group=[]
+    female_group=[]
+    for i in range(len(best_male_lion_1)):
+        male_group.append(turnStrGene(floTurnTen(best_male_lion_1[i])))
+        female_group.append(turnStrGene(floTurnTen(best_female_lion_1[i])))
+    pltX.append(50-itera)#圖的X軸為次數
+    itera-=1
