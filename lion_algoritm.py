@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 tStart = time.time()#計時開始
 # 獅群參數設計
 string_length = 8 # 基因長度
-pop_lion_num=10 # 母群體數量
+pop_lion_num=6 # 母群體數量
 best_male_lion=[] # 最佳公獅
 best_female_lion=[] # 最佳母獅
 itera=60  # 迭代次數
-mutation_rate=0.3  # 突變率
+mutation_rate=0.01  # 突變率
 growing_time=3 # 幼獅成長時間
-Bstrength=2 # 其他母獅與最佳母獅的適應值隻數
+Bstrength=3 # 其他母獅與最佳母獅的適應值隻數
 Bcount=0
 male_group=[] # 公獅群母體
 female_group=[] # 母獅群母體
@@ -67,6 +67,17 @@ def _invert_at_2(s, index1,index2):
     num=num^2 ** index1
     num=num^2 ** index2
     return bin(num)[2:].zfill(string_length)
+# 判斷基因區間，輸入int
+def range_gene_1(x):
+    if x>=lion_gene1_L and x<=lion_gene1_U:
+        return 1
+    else:
+        return 0
+def range_gene_2(x):
+    if x>=lion_gene2_L and x<=lion_gene2_U:
+        return 1
+    else:
+        return 0  
 #---------適應函數Adaptation function---------
 def Adaptation_x1(x1):  
     f1=x1*math.sin(4*math.pi*x1)
@@ -75,7 +86,7 @@ def Adaptation_x2(x2):
     f2=x2*math.sin(20*math.pi*x2)
     return f2
 def Adaptation(x1,x2):
-    f=x1*math.sin(4*math.pi*x1)+x2*math.sin(20*math.pi*x2)
+    f=21.5+x1*math.sin(4*math.pi*x1)+x2*math.sin(20*math.pi*x2)
     return f
 # 只取前面的基因 越大越好，所以要從後面開始刪
 def delList(x,del_num):
@@ -88,7 +99,7 @@ def order(x):
             if x[j]<x[i]:
                 temp=x[j]
                 x[j]=x[i]
-                x[i]=temp
+                x[i]=temp    
     return x
 # 比較大小
 def comparison_size(x1,x2):
@@ -117,18 +128,7 @@ def comparison_size(x1,x2):
         x2_A[:],x2_G[:]=zip(*x2_order) # 解壓縮，分離預測值與基因
         return x1,x2_G       
     else:
-        return x1,x2
-# 判斷基因區間，輸入int
-def range_gene_1(x):
-    if x>=lion_gene1_L and x<=lion_gene1_U:
-        return 1
-    else:
-        return 0
-def range_gene_2(x):
-    if x>=lion_gene2_L and x<=lion_gene2_U:
-        return 1
-    else:
-        return 0      
+        return x1,x2    
 #---------K-means function---------
 def kmeans_clusters(X): # 輸入n*1大小array做kmeans
     X.reshape(1,-1) # 包含單個樣本，重整數據
@@ -139,14 +139,13 @@ def kmeans_clusters(X): # 輸入n*1大小array做kmeans
 def init_lion_gene(gene_1,gene_2,pop_gene_num):
     for i in range(pop_gene_num):
         s1=random.randint(lion_gene1_L,lion_gene1_U)
-        s2=random.randint(lion_gene2_L,lion_gene2_U)        
+        s2=random.randint(lion_gene2_L,lion_gene2_U) 
         gene_1.append(turnStrGene(s1))
         gene_2.append(turnStrGene(s2))
     return gene_1,gene_2 
 # 交配：含隨機點交配，基因突變，k_meas分群
 def lion_mating(gene_1,gene_2):
     # 隨機單點交配，公母交配產生幼獅
-    i=0
     cut=0
     gene_ALL=[] # 多獅群組
     while(cut < len(gene_1)): # 假設有6對
@@ -162,9 +161,9 @@ def lion_mating(gene_1,gene_2):
             rand = random.random()
             if rand <= mutation_rate: # 若隨機數小於突變率
                 h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
-                cubs_group2[i]=_invert_at(cubs_group2[i],h) # 將基因碼突變
-                #h1=random.randint(0,7)
-                #cubs_group2[i]=_invert_at_2(cubs_group2[i],h,h1) # 將基因碼突變
+                #cubs_group2[i]=_invert_at(cubs_group2[i],h) # 將基因碼突變
+                h1=random.randint(0,7)
+                cubs_group2[i]=_invert_at_2(cubs_group2[i],h,h1) # 將基因碼突變
         cubs_group=cubs_group+cubs_group2 # 整合成 1 list
         cubs_group2_int=[]
         for i in range(len(cubs_group)): # 為了使用kmeans，做成n*1 list
@@ -215,7 +214,7 @@ def territorial_defense(group_all,growing_t):
     for i in range(len(group_ALL)):
         times=growing_t
         while(times!=0): # 若成長時間不歸零
-            nomad=random.randint(0,255) # 產生隨機流浪獅
+            nomad=random.randint(lion_gene1_L,lion_gene1_U) # 產生隨機流浪獅
             nomad_a=Adaptation_x1(tenTurnflo(nomad)) # 計算流浪獅的適應值
             male_a=Adaptation_x1(tenTurnflo(bin_Int(group_ALL[i][0]))) # 計算公獅的適應值
             if nomad_a>male_a: # 若流浪獅適應值高於公獅
@@ -245,7 +244,14 @@ def territorial_takeover(group_all):
             adept.append(Adaptation_x1(male_group[m])) # 計算出適應值
         male=list(zip(adept,male_group)) # 將公獅的適應值與基因組合在一起
         male=order(male) # 由大到小排列適應值
-        best_male_lion.append(male[0]) # 第一個最大的成為最佳公獅
+        for i in range(len(male)):
+            range1=range_gene_1(male[i][1])
+            if range1==1 and i!=len(male):
+                best_male_lion.append(male[i]) # 第一個最大的成為最佳公獅
+                break
+            else:
+                best_male_lion.append(male[0]) # 第一個最大的成為最佳母獅
+                break
         female.append(group_all[i][3]) # 母幼獅群
         female_group=female[0] # 加母公獅群到母獅群
         female.clear()
@@ -257,8 +263,15 @@ def territorial_takeover(group_all):
         female1=list(zip(adept,female_group)) # 將母獅的適應值與基因組合在一起
         female1=order(female1) # 由大到小排列適應值
         
+        for i in range(len(female1)):
+            range2=range_gene_2(female1[i][1])
+            if range2==1 and i!=len(female1):
+                best_female_lion.append(female1[i]) # 第一個最大的成為最佳母獅
+                break        
+            else:
+                best_female_lion.append(female1[0]) # 第一個最大的成為最佳母獅
+                break
         Bcount=0
-        best_female_lion.append(female1[0]) # 第一個最大的成為最佳公獅
         for f in range(len(female1)):
             if best_female_lion[i]==female1[f]:  # 若其他母獅跟第一隻母獅的適應值一樣
                 Bcount+=1 # 數量加 1
@@ -266,7 +279,7 @@ def territorial_takeover(group_all):
             adept=[]
             female1=[]
             new=[]
-            new_f=random.randint(0,255) # 生成新母獅
+            new_f=random.randint(lion_gene2_L,lion_gene2_U) # 生成新母獅
             new_f_flo=tenTurnflo(new_f) # 轉成浮點數
             new_adept=0
             new_adept=Adaptation_x2(new_f_flo) # 計算適應值      
