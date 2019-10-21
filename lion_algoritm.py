@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 tStart = time.time()#計時開始
 # 獅群參數設計
 string_length = 8 # 基因長度
-pop_lion_num=6 # 母群體數量
+pop_lion_num=10 # 母群體數量
 best_male_lion=[] # 最佳公獅
 best_female_lion=[] # 最佳母獅
 itera=60  # 迭代次數
-mutation_rate=0.1  # 突變率
+mutation_rate=0.3  # 突變率
 growing_time=3 # 幼獅成長時間
 Bstrength=2 # 其他母獅與最佳母獅的適應值隻數
 Bcount=0
@@ -60,6 +60,13 @@ def tenTurnflo(x):
 def _invert_at(s, index):
     # "**"會先運算，s為字串
     return bin(int(s,2)^2 ** (index))[2:].zfill(string_length)
+# 指定2位置突變
+def _invert_at_2(s, index1,index2):
+    # "**"會先運算，s為字串
+    num=int(s,2)
+    num=num^2 ** index1
+    num=num^2 ** index2
+    return bin(num)[2:].zfill(string_length)
 #---------適應函數Adaptation function---------
 def Adaptation_x1(x1):  
     f1=x1*math.sin(4*math.pi*x1)
@@ -130,12 +137,11 @@ def kmeans_clusters(X): # 輸入n*1大小array做kmeans
     return clf.labels_ # 返回訓練完成的標籤
 # 產生初代獅群
 def init_lion_gene(gene_1,gene_2,pop_gene_num):
-    for i in range(pop_gene_num*2):
-        s1=random.randint(0,255)
-        if (i%2) == 0:
-            gene_1.append(turnStrGene(s1))
-        else:
-            gene_2.append(turnStrGene(s1))
+    for i in range(pop_gene_num):
+        s1=random.randint(lion_gene1_L,lion_gene1_U)
+        s2=random.randint(lion_gene2_L,lion_gene2_U)        
+        gene_1.append(turnStrGene(s1))
+        gene_2.append(turnStrGene(s2))
     return gene_1,gene_2 
 # 交配：含隨機點交配，基因突變，k_meas分群
 def lion_mating(gene_1,gene_2):
@@ -157,20 +163,20 @@ def lion_mating(gene_1,gene_2):
             if rand <= mutation_rate: # 若隨機數小於突變率
                 h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
                 cubs_group2[i]=_invert_at(cubs_group2[i],h) # 將基因碼突變
+                #h1=random.randint(0,7)
+                #cubs_group2[i]=_invert_at_2(cubs_group2[i],h,h1) # 將基因碼突變
         cubs_group=cubs_group+cubs_group2 # 整合成 1 list
         cubs_group2_int=[]
         for i in range(len(cubs_group)): # 為了使用kmeans，做成n*1 list
             cubs_group_int=[]
             cubs_group_int.append(bin_Int(cubs_group[i])) # 換回十位數
             cubs_group2_int.append(cubs_group_int)
-        print(cubs_group2_int)
         kmeans_class=0
         count_repeat=0
         # 遇到重複點，分類全為 0 的時候，先重新分類看看，若3次都還是同一類，就將第一筆分類結果強制改成1類
         while(kmeans_class==0 and count_repeat<3):
             X=np.array(cubs_group2_int) # list 轉 array，逗號會消失，但可直接丟到kmeans function做分類
             X=kmeans_clusters(X) # 輸入至kmeans function做分類，輸出分類結果
-            print(X)
             zero=0
             one=0
             for i in range(len(X)):
@@ -250,6 +256,7 @@ def territorial_takeover(group_all):
         female1=[]
         female1=list(zip(adept,female_group)) # 將母獅的適應值與基因組合在一起
         female1=order(female1) # 由大到小排列適應值
+        
         Bcount=0
         best_female_lion.append(female1[0]) # 第一個最大的成為最佳公獅
         for f in range(len(female1)):
@@ -271,7 +278,6 @@ def territorial_takeover(group_all):
                 best_female_lion[i]=new[0] # 取出新母獅雙重陣列裡的第一列取代最佳母獅
         else:
             Bcount=0
-    
     adept[:],male[:]=zip(*best_male_lion) # 解壓縮
     adept[:],female[:]=zip(*best_female_lion) # 解壓縮
     return male,female    
