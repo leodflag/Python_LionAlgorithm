@@ -46,5 +46,5 @@
   ## 結果
   ### 基因
  ![image](https://github.com/leodflag/Python_LionAlgorithm/blob/master/gene_result.png)
- ###  
-![image](https://github.com/leodflag/Python_LionAlgorithm/blob/master/adaptation_result.png)
+ ### 平均適應值
+ ![image](https://github.com/leodflag/Python_LionAlgorithm/blob/master/adaptation_result.png)
