@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 @author: leodflag
-Genetic Algorithm
 """
 import random,math
 import numpy as np
@@ -15,7 +14,7 @@ string_length = 8 # 基因長度
 pop_lion_num=6 # 母群體數量
 best_male_lion=[] # 最佳公獅
 best_female_lion=[] # 最佳母獅
-itera=60  # 迭代次數
+itera=50  # 迭代次數
 mutation_rate=0.01  # 突變率
 growing_time=3 # 幼獅成長時間
 Bstrength=3 # 其他母獅與最佳母獅的適應值隻數
@@ -58,15 +57,10 @@ def tenTurnflo(x):
 #---------基因的操作-----------
 # 指定位置突變
 def _invert_at(s, index):
-    # "**"會先運算，s為字串
-    return bin(int(s,2)^2 ** (index))[2:].zfill(string_length)
-# 指定2位置突變
-def _invert_at_2(s, index1,index2):
-    # "**"會先運算，s為字串
-    num=int(s,2)
-    num=num^2 ** index1
-    num=num^2 ** index2
-    return bin(num)[2:].zfill(string_length)
+    if s[index] == '0':
+        return s[:index]+'1'+s[index+1:]
+    else:
+        return s[:index]+'0'+s[index+1:]
 # 判斷基因區間，輸入int
 def range_gene_1(x):
     if x>=lion_gene1_L and x<=lion_gene1_U:
@@ -99,7 +93,7 @@ def order(x):
             if x[j]<x[i]:
                 temp=x[j]
                 x[j]=x[i]
-                x[i]=temp    
+                x[i]=temp
     return x
 # 比較大小
 def comparison_size(x1,x2):
@@ -118,12 +112,12 @@ def comparison_size(x1,x2):
         delList(x1_order,end_n) # 只取前面的基因
         x1_A[:],x1_G[:]=zip(*x1_order) # 解壓縮，分離預測值與基因
         return x1_G,x2
-    elif dis_size<0:
+    elif dis_size < 0:  # 若x2的基因數多於x1
         for i in range(len(x2)):
-            x2_A.append(Adaptation_x2(x2[i])) # 計算適應函數並加到新x1_order列表裡
+            x2_A.append(Adaptation_x2(x2[i])) # 計算適應函數並加到新x2_order列表裡
         x2_order=list(zip(x2_A,x2)) # 綁定適應值與基因的順序
         x2_order=order(x2_order)
-        end_n=len(x2)+dis_size # 取得x1應該停在哪個位置，也就是要取幾個
+        end_n=len(x2)+dis_size # 取得x2應該停在哪個位置，也就是要取幾個
         delList(x2_order,end_n) # 只取前面的基因
         x2_A[:],x2_G[:]=zip(*x2_order) # 解壓縮，分離預測值與基因
         return x1,x2_G       
@@ -161,9 +155,7 @@ def lion_mating(gene_1,gene_2):
             rand = random.random()
             if rand <= mutation_rate: # 若隨機數小於突變率
                 h=random.randint(0,7) # 隨機位置突變，輸入為2位元，輸出字串
-                #cubs_group2[i]=_invert_at(cubs_group2[i],h) # 將基因碼突變
-                h1=random.randint(0,7)
-                cubs_group2[i]=_invert_at_2(cubs_group2[i],h,h1) # 將基因碼突變
+                cubs_group2[i]=_invert_at(cubs_group2[i],h) # 將基因碼突變
         cubs_group=cubs_group+cubs_group2 # 整合成 1 list
         cubs_group2_int=[]
         for i in range(len(cubs_group)): # 為了使用kmeans，做成n*1 list
@@ -219,7 +211,7 @@ def territorial_defense(group_all,growing_t):
             male_a=Adaptation_x1(tenTurnflo(bin_Int(group_ALL[i][0]))) # 計算公獅的適應值
             if nomad_a>male_a: # 若流浪獅適應值高於公獅
                 nomad_g=[]
-                nomad_g.append(turnStrGene(nomad)) # 轉換十進位流浪獅基因成二進位，
+                nomad_g.append(turnStrGene(nomad)) # 轉換十進位流浪獅基因成二進位
                 female_g=[] 
                 female_g.append(group_ALL[i][1]) # 獨立出原母獅二進位基因
                 new_group=lion_mating(nomad_g,female_g) # 交配後產生新獅群
@@ -228,13 +220,13 @@ def territorial_defense(group_all,growing_t):
             else:
                 times-=1 # 平安無事，幼獅成長
     return group_ALL
-
+# 領土爭奪
 def territorial_takeover(group_all):
     best_male_lion=[]
     best_female_lion=[]
     for i in range(len(group_all)):
         female=[] # 獅群組
-        male=[]        
+        male=[]
         adept=[]
         male.append(group_all[i][2]) # 公幼獅群
         male_group=male[0] # 加幼公獅群到公獅群
@@ -250,24 +242,24 @@ def territorial_takeover(group_all):
                 best_male_lion.append(male[i]) # 第一個最大的成為最佳公獅
                 break
             else:
-                best_male_lion.append(male[0]) # 第一個最大的成為最佳母獅
+                best_male_lion.append(male[0]) # 第一個最大的成為最佳公獅
                 break
         female.append(group_all[i][3]) # 母幼獅群
         female_group=female[0] # 加母公獅群到母獅群
         female.clear()
         female_group.append(tenTurnflo(bin_Int(group_all[i][1]))) # 轉換原母獅加進母獅群
         adept.clear()
-        for m in range(len(female_group)):    
+        for m in range(len(female_group)):
             adept.append(Adaptation_x2(female_group[m])) # 計算出適應值
         female1=[]
         female1=list(zip(adept,female_group)) # 將母獅的適應值與基因組合在一起
         female1=order(female1) # 由大到小排列適應值
-        
+
         for i in range(len(female1)):
             range2=range_gene_2(female1[i][1])
             if range2==1 and i!=len(female1):
                 best_female_lion.append(female1[i]) # 第一個最大的成為最佳母獅
-                break        
+                break
             else:
                 best_female_lion.append(female1[0]) # 第一個最大的成為最佳母獅
                 break
@@ -285,16 +277,16 @@ def territorial_takeover(group_all):
             new_adept=Adaptation_x2(new_f_flo) # 計算適應值      
             #if 新母獅!=公獅 and 新母獅適應值>最佳母獅適應值:
             if new_f_flo != best_male_lion[i][1] and new_adept>best_female_lion[i][0]:
-                adept.append(new_adept) # 轉成list以加入最佳母獅的格式
-                female1.append(new_f_flo) # 轉成list以加入最佳母獅的格式
-                new=list(zip(adept,female1))  # 轉成list以加入最佳母獅的格式  
+                adept.append(new_adept) # 新適應值轉成list
+                female1.append(new_f_flo) # 新母獅轉成list
+                new=list(zip(adept,female1))  # 轉成list以加入最佳母獅的格式
                 best_female_lion[i]=new[0] # 取出新母獅雙重陣列裡的第一列取代最佳母獅
         else:
             Bcount=0
     adept[:],male[:]=zip(*best_male_lion) # 解壓縮
     adept[:],female[:]=zip(*best_female_lion) # 解壓縮
-    return male,female    
-        
+    return male,female
+
 #---------1.產生獅群---------
 male_group,female_group=init_lion_gene(male_group,female_group,pop_lion_num)
 while(itera>0):
@@ -317,6 +309,8 @@ while(itera>0):
         adpet_all+=Adaptation(best_male_lion_1[i],best_female_lion_1[i]) # 計算成對公母獅總適應值
         male_group.append(turnStrGene(floTurnTen(best_male_lion_1[i]))) # 轉換成1.繁衍後代所需的二進位基因
         female_group.append(turnStrGene(floTurnTen(best_female_lion_1[i]))) # 轉換成1.繁衍後代所需的二進位基因
+    print('best_male_lion_1',best_male_lion_1)
+    print('best_female_lion_1',best_female_lion_1)
     average=adpet_all/pop_lion_num
     pltY.append(average) # 平均適應值
     pltX.append(60-itera) # 圖的X軸為次數
