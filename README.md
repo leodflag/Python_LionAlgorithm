@@ -44,4 +44,5 @@
         return clf.labels_ # 返回訓練完成的標籤
         
   ## 結果
-  
+  [基因](https://github.com/leodflag/Python_LionAlgorithm/blob/master/gene_result.png)
+  [平均適應值](https://github.com/leodflag/Python_LionAlgorithm/blob/master/adaptation_result.png)
